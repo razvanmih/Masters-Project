@@ -1,0 +1,3 @@
+UNDEF = 0
+MENU = 1
+GAMEPLAY = 2
