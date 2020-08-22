@@ -1,100 +1,88 @@
 import cv2
 import time
 import pyautogui
+
+import ImageManager
 from Utils.Exceptions import FrameRateExceededException, NoFrameCapturedException
-from Utils import InputConst
-import ScreenRecorder as sr
+from Utils import InputConst, Configuration
+import ScreenRecorder
 import ImageManager as im
 import GameManager
-from GameController import GameController
+import GameController
+import Environment
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from multiprocessing import Process
 from Utils import Configuration as config
-import pygetwindow as gw
+from Utils import GameStateConst
+
 from pynput.keyboard import Key, Controller
 import numpy as np
+from datetime import datetime
+import Agent
 import random
 
-prvs_time = 0
+print("I am", __name__, "Starting up..")
+if __name__ == '__main__':
+    action_space = [InputConst.up, InputConst.down,
+                    InputConst.left, InputConst.right,
+                    InputConst.up_and_left, InputConst.up_and_right,
+                    InputConst.down_and_left, InputConst.down_and_right,
+                    InputConst.stand]
 
-pyautogui.FAILSAFE = True
+    Configuration.current_run_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
 
-sr.create()
-gameController = GameController()
-play_btn = im.load_asset(config.play_btn_path)
+    Environment.init_environment()
+    saveFrameThreadExecutor = ThreadPoolExecutor(max_workers=4)
+    saveStateThreadExecutor = ThreadPoolExecutor(max_workers=4)
 
-# print(gw.getAllTitles())
+    total_score = 0
+    state, processed_state, done = Environment.reset()
 
-blue_stacks = gw.getWindowsWithTitle('BlueStacks')[0]
-blue_stacks.activate()
+    save_threads = []
 
-keyboard = Controller()
+    agent = Agent.Agent()
+    while not done:
+        # if frame_counter > 10:
+        #     avg_frame_rate = frame_counter / (time.time() - timer)
+        #     print("avg frame rate", avg_frame_rate)
+        # frame_counter += 1
 
-t = time.time()
-keyboard.press('a')
-print(1 / (time.time() - t))
-keyboard.release('a')
+        # action = random.choice([InputConst.up, InputConst.up_and_left, InputConst.up_and_right])
+        # action = random.choice(action_space)
+        action = InputConst.stand
+        action = InputConst.up
+        new_state, new_processed_state, done = Environment.step(action)
 
-frame_counter = 30
+        step_number = Environment.step_counter - 1
 
+        # ImageManager.process_state_for_agent()
 
-def check_white(frame):
-    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    frame_avg = np.average(gray_frame)
-    if frame_avg > 230:
-        return True
-    return False
+        frame = new_processed_state[4]
 
+        state = new_state
+        processed_state = new_processed_state
+        # hp_bars, debug_frame = GameManager.get_enemy_hp_bars(frame)
 
-while True:
-    curr_time = time.time()
+        # hp, hp_img = GameManager.get_current_hp(frame)
+        #
+        # hp_img = cv2.putText(hp_img, hp, (10, 60), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
-    try:
-        frame = sr.get_frame(frame_rate=30)
-    except FrameRateExceededException:
-        continue
-    except NoFrameCapturedException:
-        continue
+        # frame = cv2.resize(frame, (0, 0), fx=.25, fy=.25)
+        # frame = ImageManager.convert_color_to_gray(frame)
 
-    play_btn_area = im.get_play_btn_area(frame)
-    lvl_up_text_image = im.get_lvl_up_text_image(frame)
-    # cv2.imwrite("../Assets/lvl_up_text_image.png", lvl_up_text_image)
-    # hist = im.get_image_hist(lvl_up_text_image)
-    # im.plot_hist(hist)
+        # mask, debug_frame = ImageManager.debug(frame)
+        #
+        # cv2.imshow('test', mask)
+        # cv2.imshow('debug_frame', frame)
+        # # print(frame.shape)
+        #
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     cv2.destroyAllWindows()
+        #     break
+        #
+        # if Environment.step_counter == 50:
+        #     break
 
-    if GameManager.is_level_up_screen(frame):
-        key = random.randint(1, 3)
-        gameController.press_key(str(key))
-
-    # cv2.imwrite("../Assets/play_btn.png",play_btn_area)
-    # print(play_btn_area.shape, play_btn.shape)
-    # print(im.equal_similarity(play_btn, play_btn_area))
-
-    if check_white(frame):
-        print("WHITE SCREEN")
-
-    if GameManager.is_in_menu(frame):
-        gameController.press_play()
-    #
-    # if frame_counter % 30 == 0:
-    #     gameController.random_direction()
-
-    hp_bars, debug_frame = GameManager.get_enemy_hp_bars(frame)
-
-    # hp, hp_img = GameManager.get_current_hp(frame)
-    #
-    # hp_img = cv2.putText(hp_img, hp, (10, 60), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-
-    cv2.imshow('test', debug_frame)
-    cv2.imshow('test1', lvl_up_text_image)
-    if len(hp_bars) > 0:
-        print(GameManager.count_hits(hp_bars))
-        cv2.imshow('test2', hp_bars[0])
-
-
-    # print('fps: {0}'.format(1 / (curr_time - prvs_time)))
-
-    prvs_time = curr_time
-    frame_counter += 1
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
-        break
+    Environment.close()
+    saveFrameThreadExecutor.shutdown(wait=True)
+    saveStateThreadExecutor.shutdown(wait=True)

@@ -8,12 +8,12 @@ pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files (x86)\\Tesseract-OCR\
 
 def equal_similarity(img1, img2):
     equal_eval = np.array(img1 == img2)
-    # print(np.count_nonzero(equal_eval) / equal_eval.size)
     return np.count_nonzero(equal_eval) / equal_eval.size
 
+
 def hist_similarity(hist1, hist2):
-    score = cv2.compareHist(hist1,hist2,cv2.HISTCMP_CORREL)
-    print(score)
+    score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+    # print(score)
     return score
 
 
@@ -21,8 +21,17 @@ def get_play_btn_area(frame):
     return np.copy(frame[705:815, 168:395])
 
 
+def get_gameplay_check_area(frame):
+    # return np.copy(frame[20:50, -120:-90])
+    return np.copy(frame[27:42, -112:-97])
+
+
 def get_lvl_up_text_image(frame):
     return np.copy(frame[165:235, 20:-20])
+
+
+def get_death_screen_area(frame):
+    return np.copy(frame[310:400, 50:-50])
 
 
 def get_image_hist(image):
@@ -32,9 +41,10 @@ def get_image_hist(image):
         if color_hist is None:
             color_hist = np.copy(hist)
         else:
-            color_hist = np.hstack((color_hist,hist))
+            color_hist = np.hstack((color_hist, hist))
 
     return color_hist
+
 
 def plot_hist(hist):
     color = ('b', 'g', 'r')
@@ -148,3 +158,65 @@ def get_hp_bar_from_cnt(cnt, frame):
     return hp_bar
 
 
+def get_exit_detection(frame):
+    img_copy = frame.copy()
+    debug_frame = frame.copy()
+
+    mask = cv2.inRange(frame, (100, 254, 254), (250, 255, 255))  # blu 150
+    img_copy = cv2.bitwise_and(img_copy, img_copy, mask=mask)
+
+    img_copy = cv2.cvtColor(img_copy, cv2.COLOR_BGR2GRAY)
+    img_copy[img_copy != 0] = 255
+    kernel = np.ones((3, 3), np.uint8)
+    img_copy = cv2.erode(img_copy, kernel, iterations=1)
+
+    contours, hierarchy = cv2.findContours(img_copy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 200]
+    y_positions = [cv2.boundingRect(cnt)[1] for cnt in contours]
+
+    # for cnt in contours:
+    #     x, y, w, h = cv2.boundingRect(cnt)
+    #     cv2.rectangle(debug_frame, (x, y), (x + w, y + h), (255, 0, 100), 2)
+
+    return y_positions
+
+
+def debug(frame):
+    img_copy = frame.copy()
+    debug_frame = frame.copy()
+
+    mask = cv2.inRange(frame, (100, 254, 254), (250, 255, 255))
+    img_copy = cv2.bitwise_and(img_copy, img_copy, mask=mask)
+
+    img_copy = cv2.cvtColor(img_copy, cv2.COLOR_BGR2GRAY)
+    img_copy[img_copy != 0] = 255
+    kernel = np.ones((4, 4), np.uint8)
+    img_copy = cv2.erode(img_copy, kernel, iterations=1)
+
+    contours, hierarchy = cv2.findContours(img_copy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 200]
+    y_positions = [cv2.boundingRect(cnt)[1] for cnt in contours]
+
+    for cnt in contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+        cv2.rectangle(debug_frame, (x, y), (x + w, y + h), (255, 0, 100), 2)
+
+    return img_copy, debug_frame
+
+
+def convert_color_to_gray(frame):
+    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+
+def show(frame, title='DEBUG_FRAME'):
+    cv2.imshow(title, frame)
+
+
+def process_frame_for_agent(frame):
+    frame = frame.copy()
+    frame = convert_color_to_gray(frame)
+    frame = cv2.resize(frame, (0, 0), fx=.3, fy=.3)
+
+    return frame

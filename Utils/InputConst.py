@@ -1,22 +1,27 @@
 from pynput.keyboard import Key
 
-up = {'w'}
-down = {'s'}
-left = {'a'}
-right = {'d'}
+up = frozenset({'w'})
+down = frozenset({'s'})
+left = frozenset({'a'})
+right = frozenset({'d'})
 
-up_and_right = up | right
-up_and_left = up | left
-down_and_right = down | right
-down_and_left = down | left
+up_and_right = frozenset(up | right)
+up_and_left = frozenset(up | left)
+down_and_right = frozenset(down | right)
+down_and_left = frozenset(down | left)
 
-stand = set()
+stand = frozenset()
 
 one = '1'
 two = '2'
 three = '3'
 
 enter = Key.enter
+
+pause = 'p'
+home = 'h'
+confirm = '.'
+cancel = ','
 
 keys = [up, up_and_left, up_and_right,
         down, down_and_left, down_and_right,
