@@ -29,7 +29,7 @@ def set_direction(new_direction=set()):
 
 
 def take_action(action):
-    action_mapping.get(action)()
+    action_mapping.get(action_vector[action])()
 
 
 def go_up():
@@ -79,6 +79,11 @@ action_mapping = {
     InputConst.down_and_left: go_down_and_left,
     InputConst.down_and_right: go_down_and_right
 }
+action_vector = [InputConst.up, InputConst.down,
+                 InputConst.left, InputConst.right,
+                 InputConst.up_and_left, InputConst.up_and_right,
+                 InputConst.down_and_left, InputConst.down_and_right,
+                 InputConst.stand]
 
 
 def press_one():

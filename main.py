@@ -18,16 +18,11 @@ from Utils import GameStateConst
 from pynput.keyboard import Key, Controller
 import numpy as np
 from datetime import datetime
-import Agent
 import random
 
 print("I am", __name__, "Starting up..")
 if __name__ == '__main__':
-    action_space = [InputConst.up, InputConst.down,
-                    InputConst.left, InputConst.right,
-                    InputConst.up_and_left, InputConst.up_and_right,
-                    InputConst.down_and_left, InputConst.down_and_right,
-                    InputConst.stand]
+    action_space = [i for i in range(9)]
 
     Configuration.current_run_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
 
@@ -40,7 +35,6 @@ if __name__ == '__main__':
 
     save_threads = []
 
-    agent = Agent.Agent()
     while not done:
         # if frame_counter > 10:
         #     avg_frame_rate = frame_counter / (time.time() - timer)
@@ -49,8 +43,8 @@ if __name__ == '__main__':
 
         # action = random.choice([InputConst.up, InputConst.up_and_left, InputConst.up_and_right])
         # action = random.choice(action_space)
-        action = InputConst.stand
-        action = InputConst.up
+        action = 8 #InputConst.stand
+        # action = 0 #InputConst.up
         new_state, new_processed_state, done = Environment.step(action)
 
         step_number = Environment.step_counter - 1
@@ -84,5 +78,6 @@ if __name__ == '__main__':
         #     break
 
     Environment.close()
+
     saveFrameThreadExecutor.shutdown(wait=True)
     saveStateThreadExecutor.shutdown(wait=True)

@@ -218,5 +218,7 @@ def process_frame_for_agent(frame):
     frame = frame.copy()
     frame = convert_color_to_gray(frame)
     frame = cv2.resize(frame, (0, 0), fx=.3, fy=.3)
+    frame = frame/256.
+
 
     return frame

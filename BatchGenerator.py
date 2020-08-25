@@ -1,8 +1,8 @@
 import cv2
 import time
-import pyautogui
 
 import ImageManager
+from Agent import Agent
 from Utils.Exceptions import FrameRateExceededException, NoFrameCapturedException
 from Utils import InputConst, Configuration
 import ScreenRecorder
@@ -34,18 +34,25 @@ if __name__ == '__main__':
     saveFrameThreadExecutor = ThreadPoolExecutor(max_workers=4)
     saveStateThreadExecutor = ThreadPoolExecutor(max_workers=4)
 
+    agent = Agent(gamma=0.99, epsilon=0, lr=1e-3, input_dims=[5, 300, 168, 1],
+                  eps_dec=1e-3, mem_size=5000, batch_size=2000, eps_min=0,
+                  replace=10, n_actions=9)
+
     game_limit = 10
-    step_limit = 200
+    step_limit = 50
 
     for game_number in range(game_limit):
         print("Start Game Number:", game_number)
         step_number = 0
         state, processed_state, done = Environment.reset()
         while not done:
-
-            action = random.choice([InputConst.up, InputConst.up_and_left, InputConst.up_and_right])
+            print("Step:", step_number)
+            action = random.choice([0, 4, 5])
             # action = random.choice(action_space)
             # action = InputConst.stand
+            action = agent.choose_action(np.expand_dims(processed_state,axis=1))
+            action = random.choice([0, 0, 0, 0, 0, 1, 8])
+
             new_state, new_processed_state, done = Environment.step(action)
 
             frame = new_processed_state[4]

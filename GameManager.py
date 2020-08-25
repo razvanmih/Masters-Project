@@ -144,7 +144,7 @@ def get_current_state(frame):
     return GameStateConst.UNDEF
 
 
-def get_frame(frame_rate=30):
+def get_frame(frame_rate=60):
     frame = None
     while frame is None:
         try:

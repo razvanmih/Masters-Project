@@ -18,8 +18,8 @@ action_space = [InputConst.up, InputConst.down,
                 InputConst.down_and_left, InputConst.down_and_right,
                 InputConst.stand]
 
-current_state = deque(maxlen=5)
-processed_state = deque(maxlen=5)
+current_state = deque(maxlen=4)
+processed_state = deque(maxlen=4)
 
 done = None
 step_counter = None
@@ -41,8 +41,8 @@ def set_done(value):
 
 def reset():
     global current_state, processed_state, done, step_counter
-    current_state = deque(maxlen=5)
-    processed_state = deque(maxlen=5)
+    current_state = deque(maxlen=4)
+    processed_state = deque(maxlen=4)
     done = False
     step_counter = 0
     GameController.clear_input()
@@ -71,7 +71,7 @@ def update_state(frame, new_done):
     current_state.append(frame)
     processed_frame = ImageManager.process_frame_for_agent(frame)
     processed_state.append(processed_frame)
-    while len(current_state) < 5:
+    while len(current_state) < 4:
         current_state.append(frame)
         processed_state.append(processed_frame)
 
